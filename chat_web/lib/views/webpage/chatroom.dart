@@ -120,10 +120,9 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  bool isSearching = false; // yes sir its working
+  bool isSearching = false;
   int chatRefresh = 0;
   Widget chatRoomsList() {
-    //no sir still not obtained
     return StreamBuilder(
       stream: chatRooms,
       builder: (context, snapshot) {
@@ -141,12 +140,6 @@ class _ChatRoomState extends State<ChatRoom> {
                   itemCount: snapshot.data.docs.length,
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
-                    /*    if (snapshot.data.docs.length == 0 && chatRefresh == 0) { check
-                      // run again
-                      chatRefresh = 1;
-                      print("refresh  activeated");
-                      setState(() {});
-                    } */
                     print("debug code: ${snapshot.data.docs[index]}");
                     return ChatRoomsTile(
                       userName: snapshot.data.docs[index]['chatroomId']
@@ -166,14 +159,13 @@ class _ChatRoomState extends State<ChatRoom> {
   @override
   void initState() {
     new Timer.periodic(Duration(seconds: 2), (Timer t) {
-      // this will refresh the method every 2 seconds // try again running the project//ok sir // try with this now//oks ir
       if (chatRefresh == 1) {
-        getUserInfo(); // try with this // this will not give any load becouse you are alredy using stream which is used to listen the data // to make it more good just check if user list is null or empty then run that method
+        getUserInfo();
         setState(() {
           chatRefresh = 0;
         });
         print("refreshed");
-      } //no sir//still there is problem // wait
+      }
     });
     getUserInfo();
     isSearching = false;
@@ -216,7 +208,6 @@ class _ChatRoomState extends State<ChatRoom> {
     return WillPopScope(
       onWillPop: onBackPress,
       child: Scaffold(
-          // drawer:Container(width: widget.constraint.screenSize.width,height: double.infinity,child: Settings(),),
           backgroundColor: Colors.white,
           appBar: AppBar(
             backgroundColor: Color(0xff0BB674),
@@ -268,16 +259,12 @@ class _ChatRoomState extends State<ChatRoom> {
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                     padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                    //  width: widget.constraint.screenSize.width * 0.23,
                     height: widget.constraint.screenSize.height * 0.05,
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(40),
                         color: Colors.blueGrey),
                     child: TextField(
-                      // mouseCursor: MaterialStateMouseCursor.clickable,
-                      //expands: widget.constraint.isTablet ? true : false,
                       controller: searchController,
-
                       onChanged: (String name) {
                         q = name;
                         if (name == "") {
@@ -330,7 +317,6 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 }
 
-// which screnn you want to refresh//chatroom sir
 class PopScreen extends StatefulWidget {
   final SizingInformation constraint;
   const PopScreen({Key key, @required this.constraint}) : super(key: key);
@@ -339,13 +325,11 @@ class PopScreen extends StatefulWidget {
 }
 
 class _PopScreenState extends State<PopScreen> {
-  // bool isTap = true;
   final authMethod = Get.find<AuthMethod>();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      // decoration: BoxDecoration(backgroundBlendMode: BlendMode.clear),
       alignment: Alignment.topRight,
       padding: EdgeInsets.all(10),
       margin: widget.constraint.isDesktop
