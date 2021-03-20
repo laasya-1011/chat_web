@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chat_web/helper/constants.dart';
 import 'package:chat_web/helper/helperFunc.dart';
 import 'package:chat_web/services/auth.dart';
@@ -5,6 +7,7 @@ import 'package:chat_web/services/database.dart';
 import 'package:chat_web/views/tablet/TabPage.dart';
 import 'package:chat_web/views/webpage/WebPage.dart';
 import 'package:chat_web/views/webpage/conversation_screen.dart';
+import 'package:chat_web/views/webpage/webchat.dart';
 //import 'package:chat_web/views/webpage/search.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +26,7 @@ class ChatRoom extends StatefulWidget {
 class _ChatRoomState extends State<ChatRoom> {
   // String search;
   final authMethod = Get.find<AuthMethod>();
-  final databaseMethods = Get.find<DatabaseMethods>();
+  final databaseMethods = Get.find<DatabaseMethods>(); // whe
   //final searchText = Get.put(Search());
   Stream chatRooms;
   String q = "";
@@ -117,32 +120,61 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  bool isSearching = false;
+  bool isSearching = false; // yes sir its working
+  int chatRefresh = 0;
   Widget chatRoomsList() {
+    //no sir still not obtained
     return StreamBuilder(
       stream: chatRooms,
       builder: (context, snapshot) {
-        return snapshot.hasData
-            ? ListView.builder(
-                itemCount: snapshot.data.docs.length,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  return ChatRoomsTile(
-                    userName: snapshot.data.docs[index]['chatroomId']
-                        .toString()
-                        .replaceAll("_", "")
-                        .replaceAll(Constants.myName, ""),
-                    chatRoomId: snapshot.data.docs[index]["chatroomId"],
-                    constraint: widget.constraint,
-                  );
-                })
-            : Container();
+        if (!snapshot.hasData) {
+          if (chatRefresh == 0) {
+            // run again//no sir
+            chatRefresh = 1;
+            print("refresh  activated");
+            getUserInfo();
+          }
+          return Container(child: Text(''));
+        } else {
+          return snapshot.hasData
+              ? ListView.builder(
+                  itemCount: snapshot.data.docs.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    /*    if (snapshot.data.docs.length == 0 && chatRefresh == 0) { check
+                      // run again
+                      chatRefresh = 1;
+                      print("refresh  activeated");
+                      setState(() {});
+                    } */
+                    print("debug code: ${snapshot.data.docs[index]}");
+                    return ChatRoomsTile(
+                      userName: snapshot.data.docs[index]['chatroomId']
+                          .toString()
+                          .replaceAll("_", "")
+                          .replaceAll(Constants.myName, ""),
+                      chatRoomId: snapshot.data.docs[index]["chatroomId"],
+                      constraint: widget.constraint,
+                    );
+                  })
+              : Container();
+        }
       },
     );
   }
 
   @override
   void initState() {
+    new Timer.periodic(Duration(seconds: 2), (Timer t) {
+      // this will refresh the method every 2 seconds // try again running the project//ok sir // try with this now//oks ir
+      if (chatRefresh == 1) {
+        getUserInfo(); // try with this // this will not give any load becouse you are alredy using stream which is used to listen the data // to make it more good just check if user list is null or empty then run that method
+        setState(() {
+          chatRefresh = 0;
+        });
+        print("refreshed");
+      } //no sir//still there is problem // wait
+    });
     getUserInfo();
     isSearching = false;
     setState(() {});
@@ -160,115 +192,145 @@ class _ChatRoomState extends State<ChatRoom> {
     });
   }
 
+  Future<bool> onBackPress() {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Do you really want to log out?'),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Get.back();
+                  },
+                  child: Text('YES')),
+              TextButton(onPressed: null, child: Text('NO'))
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     FocusScopeNode currentFocus = FocusScope.of(this.context);
-    return Scaffold(
-        // drawer:Container(width: widget.constraint.screenSize.width,height: double.infinity,child: Settings(),),
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Color(0xff0BB674),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              authMethod.signOut();
+    return WillPopScope(
+      onWillPop: onBackPress,
+      child: Scaffold(
+          // drawer:Container(width: widget.constraint.screenSize.width,height: double.infinity,child: Settings(),),
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Color(0xff0BB674),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                authMethod.signOut();
 
-              if (widget.constraint.isDesktop) {
-                Get.to(WebPage(
-                  constraint: widget.constraint,
-                ));
-              } else {
-                Get.to(TabPage(
-                  constraint: widget.constraint,
-                ));
-              }
-            },
-          ),
-          title: Text(
-            'WidleChat',
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.normal),
-          ),
-          elevation: 0,
-          actions: [
-            GestureDetector(
-              onTap: () {
-                return showDialog(
+                if (widget.constraint.isDesktop) {
+                  Get.to(WebPage(
+                    constraint: widget.constraint,
+                  ));
+                } else {
+                  Get.to(TabPage(
+                    constraint: widget.constraint,
+                  ));
+                }
+              },
+            ),
+            title: Text(
+              'WidleChat',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal),
+            ),
+            elevation: 0,
+            actions: [
+              GestureDetector(
+                onTap: () {
+                  return showDialog(
                     context: context,
                     builder: (_) {
                       return PopScreen(constraint: widget.constraint);
-                    });
-              },
-              child: Container(
-                padding: EdgeInsets.only(right: 10),
-                child: Icon(Icons.more_vert),
-              ),
-            )
-          ],
-        ),
-        body: Container(
-            width: widget.constraint.screenSize.width,
-            child: Column(
-              children: [
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                  //  width: widget.constraint.screenSize.width * 0.23,
-                  height: widget.constraint.screenSize.height * 0.05,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(40),
-                      color: Colors.blueGrey),
-                  child: TextField(
-                    mouseCursor: MaterialStateMouseCursor.clickable,
-                    //expands: widget.constraint.isTablet ? true : false,
-                    controller: searchController,
-
-                    onChanged: (String name) {
-                      q = name;
-                      if (name == "") {
-                        // all working fine but seems some issue wait let me come with another solution
-                        setState(() {
-                          isSearching = false;
-                          print("false");
-                        });
-                      } else {
-                        isSearching = true;
-                        print("true");
-                        setState(() {});
-                      }
-                      setState(() {});
-                      print("listen");
-                      print(isSearching);
                     },
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                        suffixIcon: GestureDetector(
-                            onTap: () {
-                              isSearching = false;
-                              q = "";
-                              setState(() {});
-                              print("close");
-
-                              if (!currentFocus.hasPrimaryFocus) {
-                                currentFocus.unfocus();
-                              }
-                            },
-                            child: Icon(Icons.close)),
-                        hintText: 'search...',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        border: InputBorder.none),
-                  ),
+                  );
+                },
+                child: Container(
+                  padding: EdgeInsets.only(right: 10),
+                  child: Icon(Icons.more_vert),
                 ),
-                currentFocus.hasPrimaryFocus && isSearching == false
-                    ? chatRoomsList()
-                    : searchList(), 
-              ],
-            )));
+              )
+            ],
+          ),
+          body: Container(
+              width: widget.constraint.screenSize.width,
+              child: Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                    //  width: widget.constraint.screenSize.width * 0.23,
+                    height: widget.constraint.screenSize.height * 0.05,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40),
+                        color: Colors.blueGrey),
+                    child: TextField(
+                      // mouseCursor: MaterialStateMouseCursor.clickable,
+                      //expands: widget.constraint.isTablet ? true : false,
+                      controller: searchController,
+
+                      onChanged: (String name) {
+                        q = name;
+                        if (name == "") {
+                          setState(() {
+                            isSearching = false;
+                            print("false");
+                          });
+                        } else {
+                          isSearching = true;
+                          print("true");
+                          setState(() {});
+                        }
+                        setState(() {});
+                        print("listen");
+                        print(isSearching);
+                      },
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                          suffixIcon: GestureDetector(
+                              onTap: () {
+                                isSearching = false;
+                                q = "";
+                                setState(() {});
+                                print("close");
+
+                                if (!currentFocus.hasPrimaryFocus) {
+                                  currentFocus.unfocus();
+                                }
+
+                                if (widget.constraint.isDesktop) {
+                                  Get.to(
+                                      WebChat(constraint: widget.constraint));
+                                } else {
+                                  Get.to(
+                                      ChatRoom(constraint: widget.constraint));
+                                }
+                              },
+                              child: Icon(Icons.close)),
+                          hintText: 'search...',
+                          hintStyle: TextStyle(color: Colors.white54),
+                          border: InputBorder.none),
+                    ),
+                  ),
+                  currentFocus.hasPrimaryFocus && isSearching == false
+                      ? chatRoomsList()
+                      : searchList(),
+                ],
+              ))),
+    );
   }
 }
 
+// which screnn you want to refresh//chatroom sir
 class PopScreen extends StatefulWidget {
   final SizingInformation constraint;
   const PopScreen({Key key, @required this.constraint}) : super(key: key);
@@ -277,6 +339,7 @@ class PopScreen extends StatefulWidget {
 }
 
 class _PopScreenState extends State<PopScreen> {
+  // bool isTap = true;
   final authMethod = Get.find<AuthMethod>();
 
   @override
@@ -307,7 +370,7 @@ class _PopScreenState extends State<PopScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    //Get.to(SettingsWeb(constraint: widget.constraint));
+                    Get.to(SettingsWeb(constraint: widget.constraint));
                   },
                   child: Container(
                       padding:
@@ -378,7 +441,8 @@ class ChatRoomsTile extends StatelessWidget {
               width: 50,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                  color: Colors.blue, borderRadius: BorderRadius.circular(30)),
+                  color: Color(0xff0BB674),
+                  borderRadius: BorderRadius.circular(30)),
               child: Text(userName.substring(0, 1),
                   textAlign: TextAlign.center,
                   style: TextStyle(

@@ -1,10 +1,14 @@
 import 'package:chat_web/helper/constants.dart';
 import 'package:chat_web/services/database.dart';
+import 'package:chat_web/utils/firebaseConstans.dart';
+import 'package:chat_web/views/webpage/webchat.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'chatroom.dart';
 
 class ConversationScreen extends StatefulWidget {
   final String chatroomId;
@@ -18,6 +22,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   TextEditingController textEditingController = TextEditingController();
   final databaseMethods = Get.find<DatabaseMethods>();
   Stream<QuerySnapshot> chatMessageStream;
+
   QuerySnapshot snapshot;
   Widget chatMessageList() {
     return StreamBuilder(
@@ -77,6 +82,21 @@ class _ConversationScreenState extends State<ConversationScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: widget.chatroomId != null
+            ? IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  Get.to(widget.constraint.isDesktop
+                      ? WebChat(
+                          constraint: widget.constraint,
+                        )
+                      : ChatRoom(constraint: widget.constraint));
+                })
+            : null,
         elevation: 0,
         backgroundColor:
             widget.chatroomId != null ? Color(0xff0BB674) : Colors.transparent,
@@ -97,11 +117,12 @@ class _ConversationScreenState extends State<ConversationScreen> {
           : Stack(
               children: [
                 Container(
-                  width: widget.constraint.screenSize.width,
+                  // width: double.infinity,
                   height: double.infinity,
                   child: Image.asset(
                     'assets/color_splash_black.jpg',
                     fit: BoxFit.cover,
+                    width: widget.constraint.screenSize.width,
                     colorBlendMode: BlendMode.darken,
                   ),
                 ),
@@ -129,9 +150,11 @@ class _ConversationScreenState extends State<ConversationScreen> {
         children: [
           Container(
             width: widget.constraint.screenSize.width,
+            height: widget.constraint.screenSize.height,
             child: Image.asset(
               'assets/bgimage.png',
               fit: BoxFit.cover,
+              repeat: ImageRepeat.repeat,
             ),
           ),
           Container(
@@ -143,7 +166,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
           Container(
             alignment: Alignment.bottomCenter,
             child: Container(
-              width: widget.constraint.screenSize.width,
+              //width: widget.constraint.screenSize.width,
               height: widget.constraint.screenSize.height * 0.062,
               decoration: BoxDecoration(
                 color: Colors.grey[800],
@@ -151,51 +174,42 @@ class _ConversationScreenState extends State<ConversationScreen> {
                   BoxShadow(offset: Offset(0, 0), color: Colors.blueGrey[400]),
                 ],
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      width: widget.constraint.screenSize.width,
-                      // height: widget.constraint.screenSize.height,
-                      child: TextField(
-                        //expands: true,
-                        controller: textEditingController,
-                        style: TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                            contentPadding: EdgeInsets.only(left: 10),
-                            hintText: 'Message...',
-                            hintStyle: TextStyle(
-                              color: Colors.white54,
+              child: TextField(
+                //expands: true,
+                controller: textEditingController,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                    suffixIcon: GestureDetector(
+                        onTap: () {
+                          //print('send');
+                          sendMessage();
+                        },
+                        child: Container(
+                            width: 50,
+                            height: widget.constraint.screenSize.height * 0.05,
+                            margin: EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.blueGrey[350],
+                              borderRadius: BorderRadius.circular(40),
+                              boxShadow: [
+                                BoxShadow(
+                                    offset: Offset(0, 0),
+                                    color: Colors.blueGrey[400]),
+                              ],
                             ),
-                            border: InputBorder.none),
-                      ),
+                            padding: EdgeInsets.all(10),
+                            child: Icon(
+                              Icons.send_sharp,
+                              color: Colors.white,
+                            ))),
+                    contentPadding:
+                        EdgeInsets.only(left: 10, top: 20, right: 10),
+                    hintText: 'Message...',
+                    hintStyle: TextStyle(
+                      color: Colors.white54,
                     ),
-                  ),
-                  GestureDetector(
-                      onTap: () {
-                        //print('send');
-                        sendMessage();
-                      },
-                      child: Container(
-                          //width: widget.constraint.screenSize.width * 0.027,
-                          height: widget.constraint.screenSize.height * 0.05,
-                          margin:
-                              EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blueGrey[350],
-                            borderRadius: BorderRadius.circular(40),
-                            boxShadow: [
-                              BoxShadow(
-                                  offset: Offset(0, 0),
-                                  color: Colors.blueGrey[400]),
-                            ],
-                          ),
-                          padding: EdgeInsets.all(10),
-                          child: Icon(
-                            Icons.send_sharp,
-                            color: Colors.white,
-                          )))
-                ],
+                    border: InputBorder.none),
               ),
             ),
           )
